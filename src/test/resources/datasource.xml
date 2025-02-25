@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component-configuration xmlns="http://tis.co.jp/nablarch/component-configuration"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://tis.co.jp/nablarch/component-configuration ../../main/resources/component-configuration.xsd">
+
+  <component name="dataSource" class="nablarch.test.support.db.datasource.DataSourceFactory">
+    <property name="driverClassName" value="com.mysql.cj.jdbc.Driver" />
+<!--    <property name="driverClassName" value="org.postgresql.Driver" />-->
+<!--    <property name="driverClassName" value="org.h2.Driver" />-->
+    <property name="user" value="${db.user}" />
+    <property name="password" value="${db.password}" />
+    <property name="url" value="${db.url}" />
+    <property name="dbInitializer">
+      <component class="nablarch.test.support.db.datasource.H2DbInitializer" />
+    </property>
+  </component>
+  <component name="dialect" class="nablarch.core.db.dialect.TiDBDialect" />
+<!--  <component name="dialect" class="nablarch.core.db.dialect.PostgreSQLDialect" />-->
+<!--  <component name="dialect" class="nablarch.core.db.dialect.H2Dialect" />-->
+
+  <!-- データベース接続失敗判定 -->
+  <component name="dbAccessExceptionFactory"
+      class="nablarch.core.db.connection.exception.BasicDbAccessExceptionFactory">
+  </component>
+
+  <component name="xaDataSource" class="org.h2.jdbcx.JdbcDataSource">
+    <property name="user" value="${db.user}" />
+    <property name="password" value="${db.password}" />
+    <property name="url" value="${db.url}" />
+  </component>
+</component-configuration>
+
