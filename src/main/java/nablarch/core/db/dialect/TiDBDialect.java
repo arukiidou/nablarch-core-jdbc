@@ -1,7 +1,9 @@
 package nablarch.core.db.dialect;
 
-import java.sql.SQLException;
+import java.sql.*;
+import java.time.LocalDateTime;
 
+import nablarch.core.db.statement.ResultSetConvertor;
 import nablarch.core.db.statement.SelectOption;
 import nablarch.core.util.annotation.Published;
 import nablarch.core.db.dialect.DefaultDialect;
@@ -19,6 +21,9 @@ public class TiDBDialect extends DefaultDialect {
 
     /** Query Timeアウト時に発生する例外のエラーコード */
     private static final String QUERY_CANCEL_SQL_STATE = "3024";
+
+    /** 検索結果の値変換クラス */
+    private static final TiDBDialect.TiDBResultSetConvertor RESULT_SET_CONVERTOR = new TiDBDialect.TiDBResultSetConvertor();
 
     /**
      * {@inheritDoc}
@@ -68,6 +73,12 @@ public class TiDBDialect extends DefaultDialect {
     @Override
     public boolean isDuplicateException(SQLException sqlException) {
         return UNIQUE_ERROR_SQL_STATE.equals(sqlException.getSQLState());
+    }
+
+
+    @Override
+    public ResultSetConvertor getResultSetConvertor() {
+        return RESULT_SET_CONVERTOR;
     }
 
     /**
@@ -124,6 +135,27 @@ public class TiDBDialect extends DefaultDialect {
                 .append(", ").append(Integer.MAX_VALUE);
         }
         return result.toString();
+    }
+
+    /**
+     * ResultSetから値を取得するクラス。
+     */
+    private static class TiDBResultSetConvertor implements ResultSetConvertor {
+
+        @Override
+        public Object convert(ResultSet rs, ResultSetMetaData rsmd, int columnIndex) throws SQLException {
+            var n = rsmd.getColumnClassName(columnIndex);
+            return switch (rsmd.getColumnClassName(columnIndex)) {
+                case "java.sql.Timestamp" -> rs.getTimestamp(columnIndex);
+                case "java.time.LocalDateTime" -> rs.getTimestamp(columnIndex).toLocalDateTime();
+                default -> rs.getObject(columnIndex);
+            };
+        }
+
+        @Override
+        public boolean isConvertible(ResultSetMetaData rsmd, int columnIndex) throws SQLException {
+            return true;
+        }
     }
 
     @Override

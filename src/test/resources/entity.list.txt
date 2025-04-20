@@ -14,6 +14,7 @@ nablarch.core.db.cache.InMemoryResultSetCacheMultiTest$InMemoryResultsetCacheTes
 nablarch.core.db.transaction.JdbcTransactionFactoryTest$TestEntity
 nablarch.core.db.transaction.SimpleDbTransactionManagerTest$TestEntity
 nablarch.core.db.dialect.DialectEntity
+nablarch.core.db.dialect.TiDBDialectEntity
 nablarch.core.db.dialect.SqlServerDialectTest$SqlServerDialectEntity
 nablarch.core.db.statement.BasicSqlPStatementTestLogic$SqlServerTestEntity
 nablarch.core.db.cache.statement.CacheableSqlPStatementCompatibilityTest$CacheTestEntity

@@ -13,6 +13,8 @@ import org.junit.runner.RunWith;
 
 import java.math.BigDecimal;
 import java.sql.*;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -41,7 +43,7 @@ public class TiDBDialectTest {
 
     @BeforeClass
     public static void setUpClass() {
-        VariousDbTestHelper.createTable(DialectEntity.class);
+        VariousDbTestHelper.createTable(TiDBDialectEntity.class);
     }
 
     @After
@@ -127,16 +129,16 @@ public class TiDBDialectTest {
         // TIMESTAMP[(fsp)]のfsp 値を省略した場合、小数点の精度は 0 です。
         long t = System.currentTimeMillis();
         Timestamp timestamp = new Timestamp(t - t % 1000); //
-
+//, timestamp.toLocalDateTime().truncatedTo(ChronoUnit.MILLIS)
         VariousDbTestHelper.setUpTable(
-                new DialectEntity(1L, "12345", 100, 1234554321L, date, new BigDecimal("12345.54321"), timestamp,
-                        new byte[] {0x00, 0x50, (byte) 0xFF}));
+                new TiDBDialectEntity(1L, "12345", 100, 1234554321L, date, new BigDecimal("12345.54321"), timestamp,
+                        new byte[] {0x00, 0x50, (byte) 0xFF}, "12345  ", "12345", timestamp.toLocalDateTime().truncatedTo(ChronoUnit.MILLIS)));
         connection = VariousDbTestHelper.getNativeConnection();
         PreparedStatement statement = null;
         ResultSet rs = null;
         try {
             statement = connection.prepareStatement(
-                    "SELECT ENTITY_ID, STR, NUM, BIG_INT, DECIMAL_COL, DATE_COL, TIMESTAMP_COL, BINARY_COL FROM DIALECT WHERE ENTITY_ID = ?");
+                    "SELECT ENTITY_ID, STR, NUM, BIG_INT, DECIMAL_COL, DATE_COL, TIMESTAMP_COL, BINARY_COL, VCHAR_COL, CHAR_COL, DATETIME_COL FROM TIDBDIALECT WHERE ENTITY_ID = ?");
             statement.setLong(1, 1L);
             rs = statement.executeQuery();
 
@@ -162,6 +164,11 @@ public class TiDBDialectTest {
             // binaryはbyte[]で取得される
             final byte[] bytes = (byte[]) convertor.convert(rs, meta, 8);
             assertThat("値が取得出来ていること", bytes, is(new byte[] {0x00, 0x50, (byte) 0xFF}));
+
+            assertThat("VARCHAR型はStringで取得できる。スペースは消えない", (String) convertor.convert(rs, meta, 9), is("12345  "));
+            assertThat("CHAR型はStringで取得できる。スペースは消える", (String) convertor.convert(rs, meta, 10), is("12345"));
+
+            assertThat("DATETIME型はLocalDateTimeで取得できる", (LocalDateTime) convertor.convert(rs, meta, 11), is(timestamp.toLocalDateTime()));
         } finally {
             if (rs != null) {
                 rs.close();
@@ -203,9 +210,9 @@ public class TiDBDialectTest {
      */
     @Test
     public void convertPaginationSql_executeOffsetOnly() throws Exception {
-        VariousDbTestHelper.delete(DialectEntity.class);
+        VariousDbTestHelper.delete(TiDBDialectEntity.class);
         for (int i = 0; i < 100; i++) {
-            VariousDbTestHelper.insert(new DialectEntity((long) i + 1, "name_" + i));
+            VariousDbTestHelper.insert(new TiDBDialectEntity((long) i + 1, "name_" + i));
         }
         connection = VariousDbTestHelper.getNativeConnection();
 
@@ -245,9 +252,9 @@ public class TiDBDialectTest {
      */
     @Test
     public void convertPaginationSql_executeLimitOnly() throws Exception {
-        VariousDbTestHelper.delete(DialectEntity.class);
+        VariousDbTestHelper.delete(TiDBDialectEntity.class);
         for (int i = 0; i < 100; i++) {
-            VariousDbTestHelper.insert(new DialectEntity((long) i + 1, "name_" + i));
+            VariousDbTestHelper.insert(new TiDBDialectEntity((long) i + 1, "name_" + i));
         }
         connection = VariousDbTestHelper.getNativeConnection();
 
@@ -283,9 +290,9 @@ public class TiDBDialectTest {
      */
     @Test
     public void convertPaginationSql_executeOffsetAndLimit() throws Exception {
-        VariousDbTestHelper.delete(DialectEntity.class);
+        VariousDbTestHelper.delete(TiDBDialectEntity.class);
         for (int i = 0; i < 100; i++) {
-            VariousDbTestHelper.insert(new DialectEntity((long) i + 1, "name_" + i));
+            VariousDbTestHelper.insert(new TiDBDialectEntity((long) i + 1, "name_" + i));
         }
         connection = VariousDbTestHelper.getNativeConnection();
 
@@ -337,9 +344,9 @@ public class TiDBDialectTest {
      */
     @Test
     public void convertCountSql_execute() throws Exception {
-        VariousDbTestHelper.delete(DialectEntity.class);
+        VariousDbTestHelper.delete(TiDBDialectEntity.class);
         for (int i = 0; i < 100; i++) {
-            VariousDbTestHelper.insert(new DialectEntity((long) i + 1, "name_" + i));
+            VariousDbTestHelper.insert(new TiDBDialectEntity((long) i + 1, "name_" + i));
         }
         connection = VariousDbTestHelper.getNativeConnection();
         String sql = "select entity_id, str from dialect where str like ? order by entity_id";
@@ -380,9 +387,9 @@ public class TiDBDialectTest {
      */
     @Test
     public void convertCountSqlFromSqlId_execute() throws Exception {
-        VariousDbTestHelper.delete(DialectEntity.class);
+        VariousDbTestHelper.delete(TiDBDialectEntity.class);
         for (int i = 0; i < 100; i++) {
-            VariousDbTestHelper.insert(new DialectEntity((long) i + 1, "name_" + i));
+            VariousDbTestHelper.insert(new TiDBDialectEntity((long) i + 1, "name_" + i));
         }
         connection = VariousDbTestHelper.getNativeConnection();
         BasicStatementFactory statementFactory = new BasicStatementFactory();
